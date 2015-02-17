@@ -89,3 +89,94 @@ AND R1.rID = Re1.rID
 AND R2.rID = Re2.rID
 AND Re1.name < Re2.name
 ORDER BY Re1.name, Re2.name;
+
+
+#Q6  (1 point possible)
+#For each rating that is the lowest (fewest stars) currently in the database, return the reviewer name, movie title, and number of stars.
+#Movie ( mID, title, year, director )
+#Reviewer ( rID, name )
+#Rating ( rID, mID, stars, ratingDate )
+
+with j as (select mID, rID,  min(stars) as lowest
+from Rating
+group by mID)
+
+select Reviewer.name, Movie.title,  lowest from
+j, Movie, Reviewer
+where
+j.mID = Movie.mID
+and
+Reviewer.rID = j.rID;
+
+
+#List movie titles and average ratings, from highest-rated to lowest-rated. If two or more movies have the same average rating, list them in alphabetical order.
+#Movie ( mID, title, year, director )
+#Reviewer ( rID, name )
+#Rating ( rID, mID, stars, ratingDate )
+
+select title, avg(stars) as avg_rating
+from Movie, Rating
+where Movie.mID = Rating.mID
+group by title
+order by avg(stars) desc, title;
+
+
+#Find the names of all reviewers who have contributed three or more ratings. (As an extra challenge, try writing the query without HAVING or without COUNT.)
+#Movie ( mID, title, year, director )
+#Reviewer ( rID, name )
+#Rating ( rID, mID, stars, ratingDate )
+
+select Reviewer.name from
+Rating, Reviewer
+where
+Rating.rID = Reviewer.rID
+group by Reviewer.name
+having count(*) >=3;
+
+#Some directors directed more than one movie. For all such directors, return the titles of all movies directed by them, along with the director name. Sort by director name, then movie title. (As an extra challenge, try writing the query both with and without COUNT.)
+#Movie ( mID, title, year, director )
+#Reviewer ( rID, name )
+#Rating ( rID, mID, stars, ratingDate )
+
+
+select title, director from Movie where director in
+(select director
+from Movie
+group by director
+having count(*) > 1)
+order by director, title;
+
+#Find the movie(s) with the highest average rating. Return the movie title(s) and average rating. (Hint: This query is more difficult to write in SQLite than other systems; you might think of it as finding the highest average rating and then choosing the movie(s) with that average rating.)
+#Movie ( mID, title, year, director )
+#Reviewer ( rID, name )
+#Rating ( rID, mID, stars, ratingDate )
+
+select title, max(av) from (
+select mID, avg(stars) as av
+from Rating
+group by mID) R1,
+Movie
+where R1.mID = Movie.MID;
+
+#note: this query returns the correct result in SQLite3, both from the terminal window and from the
+#GUI called SQLiteStudio. It returns the wrong result on stanford.edu.
+
+
+#Find the movie(s) with the lowest average rating. Return the movie title(s) and average rating. (Hint: This query may be more difficult to write in SQLite than other systems; you might think of it as finding the lowest average rating and then choosing the movie(s) with that average rating.)
+
+#Movie ( mID, title, year, director )
+#Reviewer ( rID, name )
+#Rating ( rID, mID, stars, ratingDate )
+
+
+select Movie.title, avg(stars) as avs
+
+from Movie,
+    Rating
+where
+    Movie.mID = Rating.mID
+group by Movie.mID
+having
+avs = (select min(stars) from (select avg(stars) as stars
+from Rating
+group by mID));
